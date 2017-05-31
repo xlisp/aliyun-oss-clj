@@ -8,7 +8,7 @@
 ```clojure
 aliyun-oss-clj.core=>  (assumeRole accessKeyId accessKeySecret roleArn roleSessionName policy protocolType)
 ```
-* 将上一步生成STS临时的访问身份信息, 填入对应的oss的调用参数中
+* 将上一步生成STS临时的访问身份信息, 填入对应的oss的调用参数中 (Node的示例)
 ```node
 var oss = require('ali-oss');
 var co = require('co');
