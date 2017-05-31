@@ -20,7 +20,6 @@
 (def policy (:policy config))
 
 ;;(assumeRole accessKeyId accessKeySecret roleArn roleSessionName policy protocolType)
-;;=> #object[com.aliyuncs.sts.model.v20150401.AssumeRoleResponse 0x51902f96 "com.aliyuncs.sts.model.v20150401.AssumeRoleResponse@51902f96"]
 (defn assumeRole
   [^String accessKeyId ^String accessKeySecret
    ^String roleArn ^String roleSessionName ^String policy
@@ -34,8 +33,11 @@
         _ (.setRoleArn request roleArn)
         _ (.setRoleSessionName request roleSessionName)
         _ (.setPolicy request policy)]
-    (.getAcsResponse client request)
+    (let [res (.getCredentials (.getAcsResponse client request))]
+      {:getExpiration (.getExpiration res)
+       :getAccessKeyId (.getAccessKeyId res)
+       :getAccessKeySecret (.getAccessKeySecret res)
+       :getSecurityToken (.getSecurityToken res)}
+      )
     )
   )
-
-
