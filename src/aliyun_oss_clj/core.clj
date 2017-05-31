@@ -1,6 +1,19 @@
-(ns aliyun-oss-clj.core)
-
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(ns aliyun-oss-clj.core
+  (:import
+   [java.io
+    BufferedReader
+    ByteArrayInputStream
+    File
+    InputStream
+    InputStreamReader]
+   [java.util.List]
+   [java.net.URLClassLoader]
+   [com.aliyun.oss
+    ClientException
+    OSSClient
+    OSSException]
+   [com.aliyun.oss.model
+    BucketInfo
+    OSSObject
+    OSSObjectSummary
+    ObjectListing]))
