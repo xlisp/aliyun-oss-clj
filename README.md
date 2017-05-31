@@ -4,6 +4,14 @@
 
 ## Usage
 
+* project.clj & youns.clj
+```clojure
+;; project.clj
+[aliyun-oss-clj "0.1.0-SNAPSHOT"]
+;; your ns
+(ns test (:require [aliyun-oss-clj.core :as sts]))
+(sts/assumeRole accessKeyId accessKeySecret roleArn roleSessionName policy protocolType)
+```
 * 生成STS临时的访问身份信息 
 ```clojure
 aliyun-oss-clj.core=>  (assumeRole accessKeyId accessKeySecret roleArn roleSessionName policy protocolType)
