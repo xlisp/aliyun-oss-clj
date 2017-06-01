@@ -50,7 +50,7 @@
     )
   )
 
-;; (upload-file bucketName "README.md")
+;; (upload-file ossClient bucketName "README.md")
 (defn upload-file
   [ossClient bucket-name file-name]
   (.putObject ossClient bucket-name file-name (File. file-name))
