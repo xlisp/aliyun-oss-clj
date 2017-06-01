@@ -7,7 +7,7 @@
 * project.clj & youns.clj
 ```clojure
 ;; project.clj
-[aliyun-oss-clj "0.1.0-SNAPSHOT"]
+[aliyun-oss-clj "0.1.1-SNAPSHOT"]
 ;; your ns
 (ns test (:require [aliyun-oss-clj.core :as sts]))
 (sts/assumeRole accessKeyId accessKeySecret roleArn roleSessionName policy protocolType)
