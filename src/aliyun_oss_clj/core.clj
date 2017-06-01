@@ -1,43 +1,53 @@
 (ns aliyun-oss-clj.core
-  (:import
-   [com.aliyuncs DefaultAcsClient]
-   [com.aliyuncs.exceptions.ClientException]
-   [com.aliyuncs.http MethodType ProtocolType]
-   [com.aliyuncs.profile DefaultProfile IClientProfile]
-   [com.aliyuncs.sts.model.v20150401 AssumeRoleRequest AssumeRoleResponse]))
+  (:require [cheshire.core])
+  (:import (com.aliyuncs DefaultAcsClient)
+           (com.aliyuncs.profile DefaultProfile)
+           (com.aliyuncs.sts.model.v20150401 AssumeRoleRequest AssumeRoleResponse)
+           (com.aliyuncs.http MethodType ProtocolType)))
 
-(def config
-  (:aliyun-oss-ram-config
-   (read-string (slurp "config/config.clj"))))
+(set! *warn-on-reflection* true)
 
-(def REGION_CN_HANGZHOU (:region config))
-(def STS_API_VERSION "2015-04-01")
-(def accessKeyId (:accessKeyId config))
-(def accessKeySecret (:accessKeySecret config))
-(def roleArn (:rolearn config))
-(def roleSessionName (:roleSessionName config))
-(def protocolType ProtocolType/HTTPS)
-(def policy (:policy config))
+(defn create-client
+  [{:keys [region access-key-id access-key-secret]}]
+  (DefaultAcsClient.
+    (DefaultProfile/getProfile region access-key-id access-key-secret)))
 
-;;(assumeRole accessKeyId accessKeySecret roleArn roleSessionName policy protocolType)
-(defn assumeRole
-  [^String accessKeyId ^String accessKeySecret
-   ^String roleArn ^String roleSessionName ^String policy
-   ^ProtocolType protocolType]
-  (let [profile (DefaultProfile/getProfile REGION_CN_HANGZHOU accessKeyId accessKeySecret)
-        client (DefaultAcsClient. profile)
-        request (AssumeRoleRequest.)
-        _ (.setVersion request STS_API_VERSION)
-        _ (.setMethod request MethodType/POST)
-        _ (.setProtocol request protocolType)
-        _ (.setRoleArn request roleArn)
-        _ (.setRoleSessionName request roleSessionName)
-        _ (.setPolicy request policy)]
-    (let [res (.getCredentials (.getAcsResponse client request))]
-      {:getExpiration (.getExpiration res)
-       :getAccessKeyId (.getAccessKeyId res)
-       :getAccessKeySecret (.getAccessKeySecret res)
-       :getSecurityToken (.getSecurityToken res)}
-      )
-    )
-  )
+(defn get-assumed-role-creds
+  [^DefaultAcsClient client
+   {:keys [role-arn role-session-name policy-map
+           sts-api-version method protocol]
+    :or   {sts-api-version "2015-04-01"
+           method          :post
+           protocol        :https}}]
+  (let [request (doto (AssumeRoleRequest.)
+                  (.setVersion sts-api-version)
+                  (.setMethod (case method
+                                :get MethodType/GET
+                                :post MethodType/POST))
+                  (.setProtocol (case protocol
+                                  :https ProtocolType/HTTPS
+                                  :http ProtocolType/HTTP))
+                  (.setRoleArn role-arn)
+                  (.setRoleSessionName role-session-name)
+                  (.setPolicy (cheshire.core/generate-string policy-map)))
+        response (-> client
+                     ^AssumeRoleResponse (.getAcsResponse request)
+                     (.getCredentials))]
+    {:expiration        (.getExpiration response)
+     :access-key-id     (.getAccessKeyId response)
+     :access-key-secret (.getAccessKeySecret response)
+     :sts-token         (.getSecurityToken response)}))
+
+(comment
+  "Usage example"
+  (let [client (create-client {:region            "cn-shanghai"
+                               :access-key-id     "<access-key-id>"
+                               :access-key-secret "<access-key-secret>"})]
+    (get-assumed-role-creds
+      client
+      {:role-arn          "<role-arn>"
+       :role-session-name "<role-session-name>"
+       :policy-map        {:Version   "1"
+                           :Statement [{:Action   ["oss:*"]
+                                        :Resource ["acs:oss:*:*:*"]
+                                        :Effect   "Allow"}]}})))

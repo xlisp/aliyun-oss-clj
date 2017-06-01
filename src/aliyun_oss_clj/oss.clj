@@ -1,57 +1,48 @@
 (ns aliyun-oss-clj.oss
-  (:import
-   [java.io
-    BufferedReader
-    ByteArrayInputStream
-    File
-    InputStream
-    InputStreamReader]
-   [java.util.List]
-   [java.net.URLClassLoader]
-   [com.aliyun.oss
-    ClientException
-    OSSClient
-    OSSException]
-   [com.aliyun.oss.model
-    BucketInfo
-    OSSObject
-    OSSObjectSummary
-    ObjectListing]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str])
+  (:import (com.aliyun.oss OSSClient)
+           (com.aliyun.oss.model PutObjectResult)
+           (java.io File InputStream)))
 
-(def config
-  (:aliyun-oss-config (read-string (slurp "config/config.clj"))))
+(set! *warn-on-reflection* true)
 
-(def endpoint (:endpoint config))
-(def accessKeyId (:accessKeyId config))
-(def accessKeySecret (:accessKeySecret config))
-(def bucketName (:bucketName config))
-(def firstKey (:firstKey config))
+(defn create-client
+  [{:keys [^String endpoint
+           ^String access-key-id
+           ^String access-key-secret
+           ^String sts-token]}]
+  (if sts-token
+    (OSSClient. endpoint access-key-id access-key-secret sts-token)
+    (OSSClient. endpoint access-key-id access-key-secret)))
 
-;; (def ossClient (oss-client ...))
-(defn oss-client
-  ([endpoint accessKeyId accessKeySecret]
-   (OSSClient. endpoint accessKeyId accessKeySecret)) ;; 普通的模式
-  ([endpoint tempaccessKeyId tempaccessKeySecret stsToken] ;; STS 模式
-   (OSSClient. endpoint tempaccessKeyId tempaccessKeySecret stsToken)))
+(defn has-bucket-name?
+  [^OSSClient client ^String bucket-name]
+  (.doesBucketExist client bucket-name))
 
-;; (have-bucket-name? ossClient bucketName)
-(defn have-bucket-name?
-  "判断是否含有某个bucketName"
-  [ossClient bucket-name]
-  (.doesBucketExist ossClient bucket-name))
-
-;; (get-bucket-info ossClient bucketName) ;;=> {:location "oss-cn-shanghai", :creation-date #inst "2017-05-31T06:54:01.000-00:00", :owner...}
 (defn get-bucket-info
-  [ossClient bucket-name]
-  (let [info (.getBucket (.getBucketInfo ossClient bucket-name))]
-    {:location (.getLocation info)
+  [^OSSClient client ^String bucket-name]
+  (let [info (.getBucket (.getBucketInfo client bucket-name))]
+    {:location      (.getLocation info)
      :creation-date (.getCreationDate info)
-     :owner (.getOwner info)}
-    )
-  )
+     :owner         (let [owner (.getOwner info)]
+                      {:name (.getDisplayName owner)
+                       :id   (.getId owner)})}))
 
-;; (upload-file ossClient bucketName "README.md")
 (defn upload-file
-  [ossClient bucket-name file-name]
-  (.putObject ossClient bucket-name file-name (File. file-name))
-  )
+  [^OSSClient client ^String bucket-name ^String key content]
+  {:etag (.getETag ^PutObjectResult
+                   (.putObject client
+                               bucket-name
+                               key
+                               ^InputStream (io/input-stream content)))})
+
+(comment
+  (let [client (create-client {:endpoint          "http://oss-cn-shanghai.aliyuncs.com"
+                               :access-key-id     "<access-key-id>"
+                               :access-key-secret "<access-key-secret>"
+                               :sts-token         "<sts-token>"})
+        bucket-name "<bucket-name>"]
+    [(has-bucket-name? client bucket-name)
+     (get-bucket-info client bucket-name)
+     (upload-file client bucket-name "test1.txt" (.getBytes "hello, world"))]))
