@@ -100,6 +100,14 @@ co(function* () {
 
 ![](./js调用效果.jpeg)
 
+* `ETag` 设置,允许大文件的上传,如100k以上
+
+![](./ETag.jpeg)
+
+阿里云设置`Expose Header`
+
+![](./ali_etag.jpeg)
+
 ## License
 
 Copyright © 2017 FIXME
