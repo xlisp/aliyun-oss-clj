@@ -25,6 +25,7 @@
                                       :Resource ["acs:oss:*:*:*"]
                                       :Effect   "Allow"}]}}))
 ```
+注意：这里的role-arn是主账号的id，如何获取参考https://help.aliyun.com/document_detail/28763.html?spm=a2c4g.11186623.6.805.18b77ffb9lHREe
 * 将上一步生成STS临时的访问身份信息, 填入对应的oss的调用参数中 (Clojure的示例)
 
 ```clojure
