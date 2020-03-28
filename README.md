@@ -7,7 +7,7 @@
 * project.clj & youns.clj
 ```clojure
 ;; project.clj
-[aliyun-oss-clj "0.1.3"]
+[aliyun-oss-clj "0.1.5"]
 ;; your ns
 (ns test (:require [aliyun-oss-clj.core :as sts]))
 ```

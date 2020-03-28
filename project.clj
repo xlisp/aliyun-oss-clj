@@ -1,4 +1,4 @@
-(defproject aliyun-oss-clj "0.1.3"
+(defproject aliyun-oss-clj "0.1.5"
   :description "阿里云OSS的Clojure SDK封装"
   :url "https://github.com/chanshunli/aliyun-oss-clj"
   :license {:name "Eclipse Public License"
